@@ -1,0 +1,29 @@
+# /etc/init/cgrulesengd.conf
+description "Control Group Rules Daemon"
+author "VK"
+
+start on started cgroup-lite
+stop on stopped cgroup-lite
+
+pre-start script
+  test -x /usr/sbin/cgrulesengd || { stop; exit 1; }
+end script
+
+script
+  OPTIONS=""
+  CGRED_CONF=/etc/cgrules.conf
+  if [ -r "/etc/default/cgrulesengd" ]; then
+    . /etc/default/cgrulesengd
+  fi
+
+  if [ ! -s "$CGRED_CONF" ]; then
+    echo "CGRED UNCONFIGURED"
+    stop
+    exit 2
+  fi
+
+  # cgroup-lite shouldn't start if cgroups aren't supported
+  # but doesn't hurt to check anyways
+  grep -q "^cgroup" /proc/mounts || { stop; exit 3; }
+  exec /usr/sbin/cgrulesengd --nodaemon $OPTIONS
+end script

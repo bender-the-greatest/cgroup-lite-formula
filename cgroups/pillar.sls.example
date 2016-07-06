@@ -1,0 +1,6 @@
+cgroups:
+  group_name:
+    mountpoint: /cgroup/group_name
+    rules:
+      - subsystem.property: "100"
+      - memory.limit_in_bytes: "6144M"
