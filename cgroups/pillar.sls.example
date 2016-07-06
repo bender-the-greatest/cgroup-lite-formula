@@ -1,6 +1,12 @@
 cgroups:
   group_name:
+    name: group_name
+    user: user_for_cgroup
+    controllers:
+      - controller1
+      - controller2
+    destination: control_group/
     mountpoint: /cgroup/group_name
     rules:
-      - subsystem.property: "100"
-      - memory.limit_in_bytes: "6144M"
+      subsystem.property: "100"
+      memory.limit_in_bytes: "6144M"
