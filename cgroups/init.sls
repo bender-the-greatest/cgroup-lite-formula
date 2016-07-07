@@ -1,45 +1,61 @@
-{% set os = grains['os'] %}
+#!pydsl
 
-{% if os == 'Ubuntu' %}
+if __grains__['os'] == 'Ubuntu':
 
-cgroups|packages:
-  pkg.installed:
-    - pkgs:
-      - cgroup-bin
-      - cgroup-lite
-      - libcgroup1
+    created_mountpoints = []
+    for groupkey, groupval in __pillar__['cgroups'].items():
+        mountpoint = groupval['mountpoint_root']
+        if mountpoint not in created_mountpoints:
+            created_mountpoints.append(mountpoint)
+            state("cgroups|mountpoint_root|{root}".format(
+                root=mountpoint,
+            )).file.directory(
+                name=mountpoint,
+            )
 
-cgroups|cgroup-lite-service:
-  service.running:
-    - name: cgroup-lite
-    - enable: True
+    packages_state = state('cgroups|packages')
+    packages_state.pkg.installed(
+        pkgs=[
+            'cgroup-lite',
+            'cgroup-bin',
+            'libcgroup1',
+        ],
+    )
 
-cgroups|cgrulesengd-service:
-  file.managed:
-    - name: /etc/init/cgrulesengd.conf
-    - source: salt://cgroups/files/cgrulesengd.upstart
-    - template: jinja
-    - mode: 0644
+    cgroup_lite_service_state = state('cgroups|cgroup-lite-service')
+    cgroup_lite_service_state.service.running(
+        name='cgroup-lite',
+        enable=True,
+    ).require(packages_state.pkg)
 
-  service.running:
-    - name: cgrulesengd
-    - enable: True
-    - watch:
-      - file: cgroups|cgrulesengd-service
-      - file: cgroups|cgrulesengd-service|cgconfig
-      - file: cgroups|cgrulesengd-service|cgrules
-      - service: cgroups|cgroup-lite-service
+    cgrulesengd_state = state('cgroups|cgrulesengd-service')
+    cgrulesengd_state.file.managed(
+        name='/etc/init/cgrulesengd.conf',
+        source='salt://cgroups/files/cgrulesengd.upstart',
+        template='jinja',
+        mode=0644,
+    )
 
-cgroups|cgrulesengd-service|cgconfig:
-  file.managed:
-    - name: /etc/cgconfig.conf
-    - source: salt://cgroups/files/cgconfig.conf
-    - template: jinja
+    cgconfig_state = state('cgroups|cgrulesengd-service|cgconfig')
+    cgconfig_state.file.managed(
+        name='/etc/cgconfig.conf',
+        source='salt://cgroups/files/cgconfig.conf',
+        template='jinja',
+    )
 
-cgroups|cgrulesengd-service|cgrules:
-  file.managed:
-    - name: /etc/cgrules.conf
-    - source: salt://cgroups/files/cgrules.conf
-    - template: jinja
+    cgrules_state = state('cgroups|cgrulesengd-service|cgrules')
+    cgrules_state.file.managed(
+        name='/etc/cgrules.conf',
+        source='salt://cgroups/files/cgrules.conf',
+        template='jinja',
+    )
 
-{% endif %}
+    cgrulesengd_state.service.running(
+        name='cgrulesengd',
+        enable=True,
+    ).watch(
+        cgrulesengd_state.file,
+        cgconfig_state.file,
+        cgrules_state.file,
+        cgroup_lite_service_state.service,
+    )
