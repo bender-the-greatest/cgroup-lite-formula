@@ -5,7 +5,7 @@ cgroups:
       - controller1
       - controller2
     destination: control_group/
-    mountpoint: /cgroup/group_name
+    mountpoint_root: /cgroup
     rules:
       # Keep these sorted
       subsystem.property: "100"
