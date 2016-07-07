@@ -24,23 +24,22 @@ cgroups|cgrulesengd-service:
   service.running:
     - name: cgrulesengd
     - enable: True
-    - require:
+    - watch:
       - file: cgroups|cgrulesengd-service
+      - file: cgroups|cgrulesengd-service|cgconfig
+      - file: cgroups|cgrulesengd-service|cgrules
+      - service: cgroups|cgroup-lite-service
 
 cgroups|cgrulesengd-service|cgconfig:
   file.managed:
     - name: /etc/cgconfig.conf
     - source: salt://cgroups/files/cgconfig.conf
     - template: jinja
-    - require_in:
-      - service: cgroups|cgrulesengd-service
 
 cgroups|cgrulesengd-service|cgrules:
   file.managed:
     - name: /etc/cgrules.conf
     - source: salt://cgroups/files/cgrules.conf
     - template: jinja
-    - require_in:
-      - service: cgroups|cgrulesengd-service
 
 {% endif %}
