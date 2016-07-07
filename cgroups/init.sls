@@ -23,10 +23,22 @@ if __grains__['os'] == 'Ubuntu':
     )
 
     cgroup_lite_service_state = state('cgroups|cgroup-lite-service')
+    cgroup_lite_service_state.file.managed(
+        name='/etc/init/cgroup-lite.conf',
+        source='salt://cgroups/files/cgroup-lite.upstart',
+        template='jinja',
+        mode=0644,
+    )
+
     cgroup_lite_service_state.service.running(
         name='cgroup-lite',
         enable=True,
-    ).require(packages_state.pkg)
+    ).require(
+        packages_state.pkg,
+    ).watch(
+        cgroup_lite_service_state.file,
+        cgconfig_state.file,
+    )
 
     cgrulesengd_state = state('cgroups|cgrulesengd-service')
     cgrulesengd_state.file.managed(
