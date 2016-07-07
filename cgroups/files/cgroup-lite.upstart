@@ -4,6 +4,8 @@
 description "mount available cgroup filesystems"
 author "Serge Hallyn <serge.hallyn@canonical.com>"
 
+console log
+
 start on mounted MOUNTPOINT=/sys/fs/cgroup
 
 pre-start script
