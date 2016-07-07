@@ -30,6 +30,13 @@ if __grains__['os'] == 'Ubuntu':
         mode=0644,
     )
 
+    cgconfig_state = state('cgroups|cgrulesengd-service|cgconfig')
+    cgconfig_state.file.managed(
+        name='/etc/cgconfig.conf',
+        source='salt://cgroups/files/cgconfig.conf',
+        template='jinja',
+    )
+
     cgroup_lite_service_state.service.running(
         name='cgroup-lite',
         enable=True,
@@ -46,13 +53,6 @@ if __grains__['os'] == 'Ubuntu':
         source='salt://cgroups/files/cgrulesengd.upstart',
         template='jinja',
         mode=0644,
-    )
-
-    cgconfig_state = state('cgroups|cgrulesengd-service|cgconfig')
-    cgconfig_state.file.managed(
-        name='/etc/cgconfig.conf',
-        source='salt://cgroups/files/cgconfig.conf',
-        template='jinja',
     )
 
     cgrules_state = state('cgroups|cgrulesengd-service|cgrules')
