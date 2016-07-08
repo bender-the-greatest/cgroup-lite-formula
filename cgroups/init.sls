@@ -42,9 +42,6 @@ if __grains__['os'] == 'Ubuntu':
         enable=True,
     ).require(
         packages_state.pkg,
-    ).watch(
-        cgroup_lite_service_state.file,
-        cgconfig_state.file,
     )
 
     cgrulesengd_state = state('cgroups|cgrulesengd-service')
@@ -70,4 +67,6 @@ if __grains__['os'] == 'Ubuntu':
         cgconfig_state.file,
         cgrules_state.file,
         cgroup_lite_service_state.service,
+        cgroup_lite_service_state.file,
+        cgconfig_state.file,
     )
